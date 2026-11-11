@@ -1,0 +1,950 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Computer Vision 2 post read</title>
+<style>
+
+:root{
+  --bg:#F3ECD9; --paper:#FBF7EB; --sand:#E7DBBE; --sand-d:#CDBE96; --line:#D5C7A3;
+  --ink:#18261F; --muted:#47574D;
+  --g900:#12392A; --g700:#1D5A41; --g500:#3A8660; --g200:#BCD9C4; --g100:#DDEBDD;
+  --clay:#9A5F33; --clay-100:#EBD5BC;
+  --serif:Georgia,"Iowan Old Style","Palatino Linotype",serif;
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:70px}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.7 var(--sans);-webkit-font-smoothing:antialiased}
+a{color:var(--g700)}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+:focus-visible{outline:3px solid var(--g500);outline-offset:2px;border-radius:4px}
+
+/* top bar */
+.topbar{position:sticky;top:0;z-index:50;background:rgba(243,236,217,.95);backdrop-filter:blur(6px);border-bottom:1px solid var(--line)}
+.topbar-in{max-width:1100px;margin:0 auto;display:flex;align-items:center;gap:18px;padding:8px 20px}
+.brand{font:700 .95rem var(--serif);color:var(--g900);white-space:nowrap}
+.toc{display:flex;gap:4px;overflow-x:auto;scrollbar-width:thin;flex:1}
+.toc a{white-space:nowrap;text-decoration:none;font-size:.82rem;font-weight:600;color:var(--muted);padding:5px 10px;border-radius:999px}
+.toc a:hover{background:var(--sand)}
+.toc a.on{background:var(--g700);color:#fff}
+.bar{height:3px;background:transparent}
+.bar i{display:block;height:100%;width:0;background:var(--g500)}
+
+/* hero */
+.hero{background:var(--g900);color:var(--paper);padding:72px 20px 64px;position:relative;overflow:hidden}
+.hero::after{content:"";position:absolute;inset:0;background:
+  linear-gradient(90deg,rgba(243,236,217,.06) 1px,transparent 1px) 0 0/28px 28px,
+  linear-gradient(0deg,rgba(243,236,217,.06) 1px,transparent 1px) 0 0/28px 28px;pointer-events:none}
+.hero-in{max-width:860px;margin:0 auto;position:relative;z-index:1}
+.kicker{font:700 .78rem var(--sans);letter-spacing:.14em;text-transform:uppercase;color:var(--g200)}
+.hero h1{font:700 clamp(2.2rem,5.5vw,3.6rem)/1.1 var(--serif);margin:.3em 0 .35em}
+.hero p.lede{font-size:1.2rem;max-width:36em;color:#E9E2CD;margin:0 0 30px}
+.obj{background:rgba(243,236,217,.1);border:1px solid rgba(243,236,217,.25);border-radius:14px;padding:20px 24px}
+.obj h2{font:700 .78rem var(--sans);letter-spacing:.12em;text-transform:uppercase;color:var(--g200);margin:0 0 10px}
+.obj ol{margin:0;padding-left:1.3em}
+.obj li{margin:.3em 0}
+
+/* layout */
+main{max-width:860px;margin:0 auto;padding:0 20px 40px}
+section.sec{padding-top:64px}
+.sec-head{display:flex;align-items:baseline;gap:14px;margin-bottom:6px}
+.num{font:700 .9rem var(--mono);color:var(--paper);background:var(--g700);border-radius:6px;padding:2px 8px}
+h2.t{font:700 clamp(1.6rem,3.4vw,2.2rem)/1.2 var(--serif);color:var(--g900);margin:0}
+h3{font:700 1.2rem/1.3 var(--serif);color:var(--g900);margin:1.8em 0 .4em}
+p{margin:.7em 0}
+ul,ol{padding-left:1.3em}
+li{margin:.3em 0}
+code{font:.88em var(--mono);background:var(--sand);padding:.1em .35em;border-radius:4px}
+pre{background:var(--g900);color:#EFE9D4;padding:16px 18px;border-radius:12px;overflow-x:auto;font:.85rem/1.55 var(--mono);margin:10px 0}
+pre code{background:none;padding:0;color:inherit;font-size:inherit}
+pre .out{display:block;margin-top:8px;padding-top:8px;border-top:1px dashed rgba(243,236,217,.3);color:var(--g200)}
+details.code{margin:12px 0}
+details.code>summary{cursor:pointer;font-weight:600;color:var(--g700);padding:4px 0}
+
+/* callouts */
+.callout{border-left:5px solid var(--g500);background:var(--g100);border-radius:0 12px 12px 0;padding:12px 18px;margin:18px 0}
+.callout b.lab{display:block;font:700 .75rem var(--sans);letter-spacing:.1em;text-transform:uppercase;color:var(--g700)}
+.callout.warm{border-color:var(--clay);background:var(--clay-100)}
+.callout.warm b.lab{color:var(--clay)}
+.callout p{margin:.3em 0}
+
+/* tables */
+.tw{overflow-x:auto;margin:14px 0}
+table{border-collapse:collapse;width:100%;background:var(--paper);font-size:.95rem}
+th,td{border:1px solid var(--line);padding:8px 12px;text-align:left;vertical-align:top}
+th{background:var(--g700);color:#fff;font-weight:600}
+td.k{font-weight:700;color:var(--g900)}
+tbody tr:hover td{background:var(--g100)}
+
+/* widget shell */
+.viz{background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:18px 20px 20px;margin:22px 0;box-shadow:0 1px 0 rgba(0,0,0,.03)}
+.viz>.vt{font:700 .78rem var(--sans);letter-spacing:.1em;text-transform:uppercase;color:var(--g700);margin:0 0 4px}
+.viz>.vd{margin:0 0 14px;color:var(--muted);font-size:.95rem}
+.row{display:flex;flex-wrap:wrap;gap:18px;align-items:flex-start}
+.col{flex:1 1 260px;min-width:0}
+.controls{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:8px 0 12px}
+.controls label{font-size:.9rem;font-weight:600;color:var(--muted)}
+.btn,.seg button,.chip{font:600 .88rem var(--sans);border:1.5px solid var(--g700);background:transparent;color:var(--g700);padding:6px 13px;border-radius:999px;cursor:pointer}
+.btn:hover,.seg button:hover,.chip:hover{background:var(--g100)}
+.btn.solid,.seg button[aria-pressed=true],.chip[aria-pressed=true]{background:var(--g700);color:#fff}
+.seg{display:inline-flex;gap:6px;flex-wrap:wrap}
+input[type=number],select{font:600 .95rem var(--mono);padding:6px 8px;border:1.5px solid var(--sand-d);border-radius:8px;background:#fff;color:var(--ink);width:5.2em}
+select{width:auto;font-family:var(--sans)}
+input[type=range]{accent-color:var(--g700);width:100%;max-width:300px}
+.readout{background:var(--g100);border-radius:10px;padding:10px 14px;font-size:.95rem;margin-top:10px}
+.readout b{font-family:var(--mono)}
+.big{font:700 clamp(1.8rem,5vw,2.6rem)/1.1 var(--serif);color:var(--g900)}
+.sw{display:inline-block;width:1.4em;height:1.4em;border-radius:5px;border:1.5px solid rgba(0,0,0,.35);vertical-align:-.3em;margin-right:.4em}
+.cap{font-size:.85rem;color:var(--muted);margin:6px 0 0}
+.mono{font-family:var(--mono)}
+
+/* grids */
+.g{display:grid;gap:2px;grid-template-columns:repeat(var(--cols),1fr)}
+.g .c{aspect-ratio:1;display:flex;align-items:center;justify-content:center;font:600 .8rem/1 var(--mono);border-radius:3px;background:var(--sand);color:var(--ink);overflow:hidden}
+.g.tight{gap:1px}
+.px{font-size:.6rem!important}
+.c.sel{outline:3px solid var(--ink);outline-offset:-3px;z-index:1}
+#pix-grid{max-width:480px;cursor:crosshair;border:2px solid var(--g900);border-radius:6px;padding:0;background:var(--g900)}
+#pix-grid:focus-visible{outline:3px solid var(--g500);outline-offset:3px}
+.mat{max-width:260px}
+.mat .c{font-size:1rem;aspect-ratio:1.15}
+.hl{background:var(--g200)!important;outline:2px solid var(--g700);outline-offset:-2px}
+.obj-c{background:var(--g500)!important;color:#fff}
+.w-c{box-shadow:inset 0 0 0 2px var(--clay)}
+.pad-c{background:repeating-linear-gradient(45deg,var(--sand),var(--sand) 3px,var(--sand-d) 3px,var(--sand-d) 5px)!important}
+.lbl{font:700 .78rem var(--sans);color:var(--muted);margin:0 0 6px;text-transform:uppercase;letter-spacing:.06em}
+button.c{border:0;cursor:pointer;font:inherit}
+.filt{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;max-width:200px}
+.filt input{width:100%;text-align:center;padding:8px 2px}
+.sumline{font:.9rem/1.5 var(--mono);background:var(--g900);color:#EFE9D4;border-radius:10px;padding:10px 14px;overflow-x:auto;margin-top:10px}
+.arrow{align-self:center;font-size:1.6rem;color:var(--g700);padding:0 4px}
+
+/* pills */
+.pills{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0}
+.pill{min-width:64px;text-align:center;border-radius:10px;padding:6px 10px;color:#fff;font-weight:700;line-height:1.2}
+.pill small{display:block;font:600 .72rem var(--sans);opacity:.9}
+.pill span{font:700 1.3rem var(--mono)}
+.p-H{background:var(--g700)}.p-W{background:var(--g500)}.p-C{background:var(--clay)}.p-B{background:var(--g900)}
+
+/* math */
+.math{font:1.1rem var(--serif);background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:12px 18px;margin:14px 0;overflow-x:auto;text-align:center}
+.frac{display:inline-flex;flex-direction:column;vertical-align:middle;text-align:center;margin:0 .25em;font-size:.95em}
+.frac>span:first-child{border-bottom:1.5px solid currentColor;padding:0 .3em}
+.frac>span:last-child{padding:0 .3em}
+sub{font-size:.7em}
+
+/* pipeline */
+.pipe{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:8px 0}
+.node{font:700 .9rem var(--sans);padding:10px 14px;border-radius:12px;border:2px solid var(--g700);background:var(--paper);color:var(--g900);cursor:pointer}
+.node[aria-pressed=true]{background:var(--g700);color:#fff}
+.node.io{border-style:dashed;cursor:default;border-color:var(--sand-d);color:var(--muted)}
+.grp{border:2px dashed var(--g500);border-radius:16px;padding:10px 12px 12px;display:flex;flex-direction:column;gap:6px}
+.grp>.gl{font:700 .72rem var(--sans);letter-spacing:.08em;text-transform:uppercase;color:var(--g700)}
+.grp>.ns{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.sep{color:var(--g700);font-weight:700}
+
+/* bars */
+.bars .br{display:grid;grid-template-columns:110px 1fr;gap:12px;align-items:center;margin:8px 0;font-size:.92rem}
+.bars .tr{background:var(--sand);border-radius:8px;height:26px;overflow:hidden;position:relative}
+.bars .fl{height:100%;background:var(--g700);min-width:3px;border-radius:8px 0 0 8px;display:flex;align-items:center;justify-content:flex-end;padding-right:8px;color:#fff;font:700 .78rem var(--mono);white-space:nowrap}
+.bars .fl.alt{background:var(--clay)}
+.bars .vl{margin-left:8px;font:700 .85rem var(--mono);color:var(--ink)}
+
+/* layer ribbon */
+.layers{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px}
+.layer{text-align:left;border:2px solid var(--g700);background:var(--paper);border-radius:12px;padding:10px;cursor:pointer;font:inherit;color:var(--ink)}
+.layer[aria-pressed=true]{background:var(--g700);color:#fff}
+.layer b{display:block;font-size:.85rem}
+.layer span{display:block;font:.78rem var(--mono);margin-top:4px;word-break:break-all}
+
+/* strip (stride/padding) */
+.strip{display:flex;gap:2px;overflow-x:auto;padding:4px 0}
+.strip .s{flex:0 0 auto;width:16px;height:30px;border-radius:3px;background:var(--g200)}
+.strip .s.p{background:repeating-linear-gradient(45deg,var(--sand),var(--sand) 3px,var(--sand-d) 3px,var(--sand-d) 5px)}
+.strip .s.w{background:var(--g700)}
+.strip .o{background:var(--g500);opacity:.35}
+.strip .o.cur{opacity:1;background:var(--clay)}
+
+/* quiz */
+.quiz{background:var(--g100);border:1px solid var(--g200);border-radius:14px;padding:16px 20px;margin:20px 0}
+.quiz .ql{font:700 .75rem var(--sans);letter-spacing:.1em;text-transform:uppercase;color:var(--g700);margin:0}
+.quiz .qt{font-weight:600;margin:.3em 0 .6em}
+.quiz fieldset{border:0;padding:0;margin:0}
+.qo{margin:6px 0}
+.qo input{position:absolute;opacity:0}
+.qo label{display:block;border:2px solid var(--g200);background:var(--paper);padding:9px 14px;border-radius:10px;cursor:pointer}
+.qo label:hover{border-color:var(--g500)}
+.qo input:focus-visible+label{outline:3px solid var(--g500);outline-offset:2px}
+.qo.right label{border-color:var(--g700);background:#fff;box-shadow:inset 6px 0 0 var(--g700)}
+.qo.wrong label{border-color:var(--clay);background:var(--clay-100);box-shadow:inset 6px 0 0 var(--clay)}
+.qfb{margin-top:10px;font-size:.95rem}
+
+/* details / flashcards */
+details.dq{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:2px 16px;margin:10px 0}
+details.dq summary{cursor:pointer;font-weight:600;padding:10px 0;color:var(--g900)}
+.fcs{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px}
+.fc{text-align:left;font:inherit;color:var(--ink);background:var(--paper);border:2px solid var(--g700);border-radius:14px;padding:16px;cursor:pointer;min-height:150px}
+.fc .q{font-weight:700;color:var(--g900)}
+.fc .a{display:none;margin-top:10px;padding-top:10px;border-top:1px dashed var(--g500)}
+.fc[aria-expanded=true]{background:var(--g100)}
+.fc[aria-expanded=true] .a{display:block}
+.fc .hint{display:block;margin-top:10px;font-size:.8rem;color:var(--g700);font-weight:600}
+.fc[aria-expanded=true] .hint{display:none}
+.take{counter-reset:t;list-style:none;padding:0}
+.take li{counter-increment:t;display:flex;gap:14px;background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:12px 16px;margin:8px 0}
+.take li::before{content:counter(t);flex:0 0 auto;width:30px;height:30px;border-radius:50%;background:var(--g700);color:#fff;font:700 .9rem var(--sans);display:grid;place-items:center}
+
+footer{background:var(--g900);color:var(--g200);text-align:center;padding:28px 20px;font:600 .95rem var(--serif);margin-top:40px}
+
+@media (max-width:600px){
+  body{font-size:16px}
+  .hero{padding:48px 16px 44px}
+  .viz{padding:14px}
+  .brand{display:none}
+  .bars .br{grid-template-columns:1fr}
+}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+
+.chart{width:100%;height:auto;display:block;touch-action:pan-y}
+.chart text{font-family:var(--sans);fill:var(--muted)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;margin:6px 0 4px;font-size:.85rem;font-weight:600}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend svg{width:34px;height:12px}
+.tag{display:inline-block;font:700 .75rem var(--sans);background:var(--g100);color:var(--g700);border:1px solid var(--g200);border-radius:999px;padding:1px 10px;margin:2px 3px 2px 0}
+.cards3{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin:14px 0}
+.mini{background:var(--paper);border:1px solid var(--line);border-top:5px solid var(--g500);border-radius:12px;padding:12px 16px}
+.mini.c2{border-top-color:var(--clay)}.mini.c3{border-top-color:var(--g900)}
+.mini b{display:block;font:700 .78rem var(--sans);letter-spacing:.08em;text-transform:uppercase;color:var(--g700)}
+.unit{aspect-ratio:1;border-radius:50%;background:var(--g500);display:flex;align-items:center;justify-content:center;color:#fff;font:700 .8rem var(--mono)}
+.unit.off{background:repeating-linear-gradient(45deg,var(--sand),var(--sand) 3px,var(--sand-d) 3px,var(--sand-d) 5px);color:var(--ink);border:2px dashed var(--clay)}
+.frame{aspect-ratio:1;border-radius:8px;display:flex;align-items:center;justify-content:center;font:700 .78rem var(--mono);color:#fff;border:3px solid transparent}
+.frame.tr{background:var(--g700)}.frame.va{background:var(--clay)}
+.frame.dup{border-color:var(--ink);box-shadow:0 0 0 2px #fff inset}
+.flow{display:flex;flex-direction:column;gap:6px;max-width:420px;margin:14px auto}
+.flow div{background:var(--g700);color:#fff;border-radius:10px;padding:10px 16px;text-align:center;font-weight:600}
+.flow div:nth-child(even){background:transparent;color:var(--g700);padding:0;font-size:1.3rem;line-height:1}
+.flow div:last-child{background:var(--g900)}
+.ex{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:12px 16px;margin:8px 0}
+.ex .nums{font:.95rem/1.6 var(--mono);background:var(--g900);color:#EFE9D4;border-radius:8px;padding:8px 12px;margin:6px 0;white-space:pre-wrap}
+.step6{counter-reset:s;list-style:none;padding:0}
+.step6 li{counter-increment:s;display:flex;gap:12px;margin:6px 0}
+.step6 li::before{content:counter(s);flex:0 0 28px;height:28px;border-radius:50%;background:var(--g700);color:#fff;font:700 .85rem var(--sans);display:grid;place-items:center}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-in">
+    <span class="brand">Computer Vision 2 post read</span>
+    <nav class="toc" aria-label="Sections" id="toc"></nav>
+  </div>
+  <div class="bar" aria-hidden="true"><i id="prog"></i></div>
+</header>
+
+<div class="hero">
+  <div class="hero-in">
+    <div class="kicker">Computer Vision · From “it learns” to “it generalizes”</div>
+    <h1>Computer Vision 2 post read</h1>
+    <p class="lede">A CNN reaches 99% training accuracy. Should we trust it on new images? This post shows how to read the evidence, and which interventions help for which reason.</p>
+    <div class="obj">
+      <h2>By the end you will be able to</h2>
+      <ol>
+        <li>Explain overfitting using training and validation curves</li>
+        <li>Distinguish underfitting, a good fit, and overfitting</li>
+        <li>Describe Batch Normalization, Dropout, weight decay, data augmentation, learning-rate scheduling, and early stopping</li>
+        <li>Compare interventions using a consistent validation setup</li>
+        <li>Recognize data leakage and common <code>train()</code> / <code>eval()</code> mistakes</li>
+        <li>Diagnose a generalization problem and justify a next experiment</li>
+      </ol>
+    </div>
+  </div>
+</div>
+
+<main>
+
+<!-- 1 HOOK -->
+<section class="sec" id="hook" aria-labelledby="h-hook" data-nav="The 99% model">
+  <div class="sec-head"><span class="num">01</span><h2 class="t" id="h-hook">The 99% model</h2></div>
+  <div class="callout"><b class="lab">Big question</b><p>A CNN achieves 99% training accuracy. Should we trust it on new images?</p></div>
+  <p>Training accuracy only tells us how well the model fits data it has already seen. The number we actually want is performance on held-out data. The rest of this post is about how to measure that gap, why it opens, and how to close it responsibly.</p>
+  <div class="quiz" data-quiz="q1"></div>
+
+  <div class="viz">
+    <p class="vt">The learning journey</p>
+    <div class="flow" role="list" aria-label="Workflow">
+      <div role="listitem">Observe failure</div><div aria-hidden="true">↓</div>
+      <div role="listitem">Diagnose evidence</div><div aria-hidden="true">↓</div>
+      <div role="listitem">Choose targeted intervention</div><div aria-hidden="true">↓</div>
+      <div role="listitem">Run controlled experiment</div><div aria-hidden="true">↓</div>
+      <div role="listitem">Compare validation behavior</div><div aria-hidden="true">↓</div>
+      <div role="listitem">Keep the simplest solution that works</div>
+    </div>
+    <p class="cap">Every section below follows this loop: predict → run the experiment → inspect evidence → explain the result.</p>
+  </div>
+  <div class="callout warm"><b class="lab">A habit worth building</b><p>For every intervention ask: <i>What problem are we solving? What do I predict? What evidence would confirm it?</i> Connect a technique to a mechanism instead of saying "Dropout prevents overfitting".</p></div>
+</section>
+
+<!-- 2 SETUP -->
+<section class="sec" id="setup" aria-labelledby="h-setup" data-nav="Setup" >
+  <div class="sec-head"><span class="num">02</span><h2 class="t" id="h-setup">The experimental setup</h2></div>
+  <p>We continue with <b>CIFAR-10</b>: RGB, 32×32 images, 10 classes. We deliberately use a <b>small training subset</b>. This is a teaching choice that makes the generalization problem visible without a large training run.</p>
+  <div class="callout"><b class="lab">Important</b><p>The exact accuracy numbers are not the lesson. The learning-curve pattern is. Results can vary with hardware and random seed.</p></div>
+
+  <div class="viz">
+    <p class="vt">Visualizer · Data split</p>
+    <div class="bars" id="split"></div>
+    <div class="lbl" style="margin-top:12px">10 classes</div>
+    <div id="classes"></div>
+  </div>
+
+  <h3>The baseline model</h3>
+  <p>Four 3×3 conv layers (64 → 128 → 256 → 256 channels) with two max-pools, global average pooling, and one linear layer for 10 classes. It has <b>963,466 trainable parameters</b>, which is a lot of capacity for 4,000 images.</p>
+  <div class="viz">
+    <p class="vt">Visualizer · ConvNet layers</p>
+    <div class="pipe" id="net-pipe"></div>
+    <div class="readout" id="net-read" aria-live="polite"></div>
+  </div>
+
+  <details class="code"><summary>Setup, model and training helpers</summary>
+<pre><code>train_tf = transforms.ToTensor()
+test_tf = transforms.ToTensor()
+train_full = datasets.CIFAR10("./data", train=True, download=True, transform=train_tf)
+test_full = datasets.CIFAR10("./data", train=False, download=True, transform=test_tf)
+
+train_idx = list(range(4000))
+val_idx = list(range(2000))
+train_ds = Subset(train_full, train_idx)
+val_ds = Subset(test_full, val_idx)
+train_loader = DataLoader(train_ds, batch_size=128, shuffle=True, num_workers=2)
+val_loader = DataLoader(val_ds, batch_size=256, shuffle=False, num_workers=2)
+
+class ConvNet(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.features = nn.Sequential(
+            nn.Conv2d(3,64,3,padding=1), nn.ReLU(),
+            nn.Conv2d(64,128,3,padding=1), nn.ReLU(), nn.MaxPool2d(2),
+            nn.Conv2d(128,256,3,padding=1), nn.ReLU(), nn.MaxPool2d(2),
+            nn.Conv2d(256,256,3,padding=1), nn.ReLU(),
+            nn.AdaptiveAvgPool2d(1)
+        )
+        self.classifier = nn.Linear(256,10)
+    def forward(self,x):
+        x=self.features(x)
+        return self.classifier(torch.flatten(x,1))
+
+def run_epoch(model, loader, optimizer=None):
+    training = optimizer is not None
+    model.train(training)
+    loss_sum=correct=n=0
+    for x,y in loader:
+        x,y=x.to(device),y.to(device)
+        if training: optimizer.zero_grad(set_to_none=True)
+        logits=model(x); loss=F.cross_entropy(logits,y)
+        if training:
+            loss.backward(); optimizer.step()
+        loss_sum += loss.item()*len(x)
+        correct += (logits.argmax(1)==y).sum().item(); n += len(x)
+    return loss_sum/n, correct/n
+
+def fit(model, train_loader, val_loader, epochs=15, lr=1e-3, weight_decay=0):
+    opt=optim.Adam(model.parameters(),lr=lr,weight_decay=weight_decay)
+    h={"train_loss":[],"val_loss":[],"train_acc":[],"val_acc":[]}
+    for e in range(1,epochs+1):
+        tl,train_acc=run_epoch(model,train_loader,opt); vl,val_acc=run_epoch(model,val_loader)
+        for k,v in zip(h,[tl,vl,train_acc,val_acc]): h[k].append(v)
+    return h</code></pre></details>
+</section>
+
+<!-- 3 OVERFITTING -->
+<section class="sec" id="overfit" aria-labelledby="h-over" data-nav="Overfitting">
+  <div class="sec-head"><span class="num">03</span><h2 class="t" id="h-over">What does overfitting look like?</h2></div>
+  <div class="cards3">
+    <div class="mini c2"><b>Underfitting</b>Train poor, validation poor.</div>
+    <div class="mini"><b>Good fit</b>Train good, validation good.</div>
+    <div class="mini c3"><b>Overfitting</b>Train keeps improving; validation stops improving or worsens.</div>
+  </div>
+  <p>If training loss keeps falling while validation loss starts rising, overfitting is the leading diagnosis: the model continues fitting training data while generalization deteriorates. A description like that is better than the bare word "overfitting": say what the <b>relationship between the curves</b> is.</p>
+
+  <div class="viz" id="shape-demo">
+    <p class="vt">Visualizer · The three patterns</p>
+    <p class="vd">Schematic curves (not experiment data). Switch pattern and compare the two lines.</p>
+    <div class="controls"><div class="seg" id="sd-seg" role="group" aria-label="Pattern"></div></div>
+    <div id="sd-chart"></div>
+    <div class="readout" id="sd-read" aria-live="polite"></div>
+  </div>
+
+  <div class="callout warm"><b class="lab">Common misconception</b><p>"Any train/validation gap means overfitting." A small, stable gap can be normal; the <b>direction and magnitude</b> matter. A gap is a clue, not proof: first rule out a bad split, preprocessing mismatch, label problems, or leakage.</p></div>
+  <p>Do not memorise a universal numerical threshold. An acceptable gap depends on the task, noise, dataset size and evaluation design.</p>
+</section>
+
+<!-- 4 BASELINE -->
+<section class="sec" id="baseline" aria-labelledby="h-base" data-nav="Baseline">
+  <div class="sec-head"><span class="num">04</span><h2 class="t" id="h-base">Baseline: let the CNN overfit</h2></div>
+  <p>First run the model with <b>no regularization</b>. We expect training performance to improve continuously while validation performance may eventually plateau or deteriorate. The baseline matters: without it we cannot tell whether an intervention actually helped.</p>
+  <div class="viz" id="run-base"></div>
+  <p>The <b>generalization gap</b> (train accuracy − validation accuracy) shows how much better the model does on seen than on unseen examples. A <i>growing</i> gap is a warning sign for memorization. Use the “Gap” view above to inspect it.</p>
+  <div class="callout"><b class="lab">Reading this run</b><p>After 15 epochs the baseline reached 0.487 train and 0.461 validation accuracy; both were still rising, so the curves had not yet clearly diverged. Judge by the relationship across epochs, not by one number.</p></div>
+</section>
+
+<!-- 5 BN -->
+<section class="sec" id="bn" aria-labelledby="h-bn" data-nav="BatchNorm">
+  <div class="sec-head"><span class="num">05</span><h2 class="t" id="h-bn">Batch Normalization</h2></div>
+  <p>A common pattern is <code>Conv → BatchNorm → ReLU</code>. BatchNorm normalizes intermediate activations using mini-batch statistics during training and running statistics during evaluation.</p>
+  <div class="callout"><b class="lab">Primary role</b><p>Stabilize optimization. It may also have a regularizing effect, but it is not a universal anti-overfitting switch.</p></div>
+  <div class="viz" id="bn-viz">
+    <p class="vt">Visualizer · BatchNorm in train vs. eval mode</p>
+    <div class="controls"><div class="seg" id="bn-seg" role="group" aria-label="Mode"></div></div>
+    <div class="pipe" id="bn-pipe"></div>
+    <div class="readout" id="bn-read" aria-live="polite"></div>
+  </div>
+  <div class="viz" id="run-bn"></div>
+  <p>Compare with the baseline: the BatchNorm run learns much faster on the training set (0.820 train accuracy at epoch 15) and reaches its lowest validation loss at epoch 5, but validation loss jumps around from epoch to epoch (for example 2.8081 at epoch 11). BatchNorm may make optimization smoother and can improve validation behavior; it does not guarantee that overfitting disappears.</p>
+  <details class="code"><summary>Code</summary>
+<pre><code>class ConvNetBN(ConvNet):
+    def __init__(self):
+        super().__init__()
+        self.features=nn.Sequential(
+            nn.Conv2d(3,64,3,padding=1),nn.BatchNorm2d(64),nn.ReLU(),
+            nn.Conv2d(64,128,3,padding=1),nn.BatchNorm2d(128),nn.ReLU(),nn.MaxPool2d(2),
+            nn.Conv2d(128,256,3,padding=1),nn.BatchNorm2d(256),nn.ReLU(),nn.MaxPool2d(2),
+            nn.Conv2d(256,256,3,padding=1),nn.BatchNorm2d(256),nn.ReLU(),nn.AdaptiveAvgPool2d(1))
+        self.classifier=nn.Linear(256,10)</code></pre></details>
+</section>
+
+<!-- 6 DROPOUT -->
+<section class="sec" id="dropout" aria-labelledby="h-drop" data-nav="Dropout">
+  <div class="sec-head"><span class="num">06</span><h2 class="t" id="h-drop">Dropout</h2></div>
+  <p>Dropout randomly masks activations during training. In train mode some activations are dropped; in eval mode Dropout is disabled.</p>
+  <div class="viz" id="drop-viz">
+    <p class="vt">Visualizer · Dropout mask on 16 activations</p>
+    <p class="vd">The experiment uses p = 0.5 on the pooled 256-feature vector before the classifier. Here 16 units illustrate the idea.</p>
+    <div class="controls">
+      <div class="seg" id="dr-seg" role="group" aria-label="Mode"></div>
+      <label>p <input type="range" id="dr-p" min="0" max="0.9" step="0.1" value="0.5" style="width:140px"></label><b class="mono" id="dr-pv">0.5</b>
+      <button class="btn solid" id="dr-new">New forward pass</button>
+    </div>
+    <div class="g mat" id="dr-g" style="--cols:8;max-width:420px"></div>
+    <div class="readout" id="dr-read" aria-live="polite"></div>
+  </div>
+  <p><b>Prediction:</b> why might training accuracy become <i>lower</i> after adding Dropout? Because training is intentionally made harder. The relevant question is whether validation performance becomes better or more stable.</p>
+  <div class="viz" id="run-drop"></div>
+  <div class="callout warm"><b class="lab">Common misconception</b><p>"Lower training accuracy means the model became worse." Not necessarily: Dropout deliberately makes training harder, and what we care about is generalization behavior. In this run training accuracy ended at 0.422 and validation at 0.449.</p></div>
+  <details class="code"><summary>Code</summary>
+<pre><code>class ConvNetDropout(ConvNet):
+    def __init__(self,p=.5):
+        super().__init__(); self.dropout=nn.Dropout(p)
+    def forward(self,x):
+        x=self.features(x); return self.classifier(self.dropout(torch.flatten(x,1)))
+
+drop_model=ConvNetDropout(.5).to(device)
+hist_drop=fit(drop_model,train_loader,val_loader,epochs=15)</code></pre></details>
+</section>
+
+<!-- 7 WD -->
+<section class="sec" id="wd" aria-labelledby="h-wd" data-nav="Weight decay">
+  <div class="sec-head"><span class="num">07</span><h2 class="t" id="h-wd">Weight decay / L2 regularization</h2></div>
+  <div class="math">objective = data loss + λ × Σ w²</div>
+  <p>This is a simplified objective. PyTorch exposes it commonly through <code>weight_decay</code> in the optimizer. The intuition: the optimizer is discouraged from relying on unnecessarily large parameter values, which can encourage simpler solutions that generalize better.</p>
+  <div class="viz" id="wd-viz">
+    <p class="vt">Visualizer · The L2 penalty</p>
+    <p class="vd">Illustrative weights (not from the experiment). Edit them or load a preset, and see what the penalty charges.</p>
+    <div class="controls" id="wd-pre"></div>
+    <div class="controls"><label>w₁ <input type="number" step="0.1" id="w0"></label><label>w₂ <input type="number" step="0.1" id="w1"></label><label>w₃ <input type="number" step="0.1" id="w2"></label><label>w₄ <input type="number" step="0.1" id="w3"></label>
+      <label>λ <select id="wd-l"><option>0.0001</option><option>0.001</option><option selected>0.01</option><option>0.1</option></select></label></div>
+    <div class="bars" id="wd-bars"></div>
+    <div class="readout" id="wd-read" aria-live="polite"></div>
+  </div>
+  <div class="viz" id="run-wd"></div>
+  <p>This run used <code>weight_decay=1e-4</code> and ended with 0.498 train and 0.446 validation accuracy; its best validation loss came at epoch 14.</p>
+  <details class="code"><summary>Code</summary>
+<pre><code>wd_model=ConvNet().to(device)
+hist_wd=fit(wd_model,train_loader,val_loader,epochs=15,weight_decay=1e-4)</code></pre></details>
+</section>
+
+<!-- 8 AUG -->
+<section class="sec" id="aug" aria-labelledby="h-aug" data-nav="Augmentation">
+  <div class="sec-head"><span class="num">08</span><h2 class="t" id="h-aug">Data augmentation</h2></div>
+  <p>Now change the <b>training data</b>, not the model. For CIFAR-10, reasonable examples are random horizontal flips and small random crops.</p>
+  <div class="callout"><b class="lab">Principle</b><p>Create label-preserving variation so the model cannot depend on exact pixel arrangements or accidental details.</p></div>
+  <div class="viz" id="aug-viz">
+    <p class="vt">Visualizer · Flip and random crop</p>
+    <p class="vd">A toy 16×16 image. The CIFAR-10 recipe is flip, then pad 4 and crop 32×32; here the padding is scaled to 2 pixels. Zero padding shows as black.</p>
+    <div class="controls">
+      <button class="btn" id="au-orig">Original</button>
+      <button class="btn" id="au-flip" aria-pressed="false">Flip horizontally</button>
+      <button class="btn solid" id="au-rand">Draw a random augmentation</button>
+    </div>
+    <div class="row">
+      <div class="col" style="flex-basis:200px"><div class="lbl">Original (label: cat)</div><div class="g tight" id="au-a" style="--cols:16;max-width:240px"></div></div>
+      <div class="col" style="flex-basis:200px"><div class="lbl">Augmented (label: still cat)</div><div class="g tight" id="au-b" style="--cols:16;max-width:240px"></div></div>
+    </div>
+    <div class="readout" id="au-read" aria-live="polite"></div>
+  </div>
+  <div class="callout warm"><b class="lab">Important caveat</b><p>Augmentation is a domain assumption. A transformation that changes the label is harmful, and more augmentation is not always better: it can hurt if the transformation is unrealistic or destroys label-relevant information. What it buys you is more realistic training variation and less reliance on irrelevant exact details.</p></div>
+  <div class="viz" id="run-aug"></div>
+  <p>In this 15-epoch run training accuracy ended at 0.442 and validation at 0.403. Validation accuracy is below the baseline's final value, which is a reminder that a single short run does not prove or disprove a technique.</p>
+  <details class="code"><summary>Code</summary>
+<pre><code>aug_tf=transforms.Compose([transforms.RandomHorizontalFlip(),transforms.RandomCrop(32,padding=4),transforms.ToTensor()])
+aug_full=datasets.CIFAR10("./data",train=True,download=True,transform=aug_tf)
+aug_ds=Subset(aug_full,train_idx)
+aug_loader=DataLoader(aug_ds,batch_size=128,shuffle=True,num_workers=2)
+
+aug_model=ConvNet().to(device)
+hist_aug=fit(aug_model,aug_loader,val_loader,epochs=15)</code></pre></details>
+</section>
+
+<!-- 9 LR -->
+<section class="sec" id="lr" aria-labelledby="h-lr" data-nav="LR scheduling">
+  <div class="sec-head"><span class="num">09</span><h2 class="t" id="h-lr">Learning-rate scheduling</h2></div>
+  <p>A scheduler changes the optimizer's step size during training: <i>validation plateaus → reduce learning rate → smaller updates</i>. This is primarily <b>optimization control</b>, not a magic regularizer. It can help the optimizer make finer updates after progress slows, and it can indirectly affect generalization.</p>
+  <div class="viz" id="run-sched"></div>
+  <p>In the recorded run (<code>ReduceLROnPlateau</code>, factor 0.5, patience 2) the validation loss never went three epochs in a row without improving, so the learning rate stayed at 1.00e-03 for all 15 epochs. Try other settings on the same recorded validation losses:</p>
+  <div class="viz" id="lr-viz">
+    <p class="vt">Visualizer · What-if: the plateau rule on the recorded run</p>
+    <p class="vd">Re-applies the plateau rule to the recorded validation losses. It shows when the rate <i>would</i> have dropped; it does not re-train the model.</p>
+    <div class="controls">
+      <label>patience <select id="lr-pat"><option>0</option><option>1</option><option selected>2</option><option>3</option></select></label>
+      <label>factor <select id="lr-fac"><option value="0.5" selected>0.5</option><option value="0.1">0.1</option></select></label>
+    </div>
+    <div id="lr-chart"></div>
+    <div class="readout" id="lr-read" aria-live="polite"></div>
+  </div>
+  <details class="code"><summary>Code</summary>
+<pre><code>def fit_scheduler(model,epochs=15):
+    opt=optim.Adam(model.parameters(),lr=1e-3)
+    sched=optim.lr_scheduler.ReduceLROnPlateau(opt,mode="min",factor=.5,patience=2)
+    ...
+    for e in range(1,epochs+1):
+        tl,ta=run_epoch(model,train_loader,opt); vl,va=run_epoch(model,val_loader)
+        sched.step(vl)</code></pre></details>
+</section>
+
+<!-- 10 ES -->
+<section class="sec" id="es" aria-labelledby="h-es" data-nav="Early stopping">
+  <div class="sec-head"><span class="num">10</span><h2 class="t" id="h-es">Early stopping</h2></div>
+  <p>If validation loss is best at some epoch but training continues while validation worsens, the model keeps fitting training-specific details. Early stopping uses a validation metric as a training-control signal and should <b>restore the best checkpoint</b>. This is why it is a form of regularization: it limits how long the model can keep fitting training-specific detail after validation stops improving.</p>
+  <div class="callout warm"><b class="lab">Common misconception</b><p>"Stop when training accuracy is high." The stopping signal should come from validation behavior.</p></div>
+  <div class="viz" id="run-es"></div>
+  <p>With <code>patience=3</code> the recorded 25-epoch run never triggered the stop, because validation loss kept reaching new lows: the best epoch was epoch 25. Explore how other patience values would behave on the same validation losses:</p>
+  <div class="viz" id="es-viz">
+    <p class="vt">Visualizer · Patience what-if</p>
+    <p class="vd">Replays the stop rule on the recorded validation loss. The restored checkpoint is the best epoch seen before stopping.</p>
+    <div class="controls"><label for="es-p">Patience</label><input type="range" id="es-p" min="1" max="8" value="3"> <b class="mono" id="es-pv"></b></div>
+    <div id="es-chart"></div>
+    <div class="readout" id="es-read" aria-live="polite"></div>
+  </div>
+  <details class="code"><summary>Code</summary>
+<pre><code>def fit_early(model,epochs=25,patience=3):
+    opt=optim.Adam(model.parameters(),lr=1e-3)
+    best=float("inf"); best_state=None; best_epoch=0; wait=0
+    for e in range(1,epochs+1):
+        tl,ta=run_epoch(model,train_loader,opt); vl,va=run_epoch(model,val_loader)
+        if vl&lt;best:
+            best=vl; best_epoch=e; wait=0
+            best_state={k:v.detach().cpu().clone() for k,v in model.state_dict().items()}
+        else: wait+=1
+        if wait&gt;=patience: break
+    model.load_state_dict(best_state)
+    return h,best_epoch</code></pre></details>
+</section>
+
+<!-- 11 COMPARE -->
+<section class="sec" id="compare" aria-labelledby="h-cmp" data-nav="Comparison">
+  <div class="sec-head"><span class="num">11</span><h2 class="t" id="h-cmp">Controlled comparison</h2></div>
+  <div class="tw"><table>
+    <thead><tr><th>Technique</th><th>What changes?</th><th>Main idea</th></tr></thead>
+    <tbody>
+      <tr><td class="k">BatchNorm</td><td>activations / optimization</td><td>stabilize optimization</td></tr>
+      <tr><td class="k">Dropout</td><td>activations</td><td>reduce pathway dependence</td></tr>
+      <tr><td class="k">Weight decay</td><td>parameter updates</td><td>discourage large weights</td></tr>
+      <tr><td class="k">Augmentation</td><td>training data</td><td>encourage invariance</td></tr>
+      <tr><td class="k">Scheduler</td><td>learning rate</td><td>improve optimization trajectory</td></tr>
+      <tr><td class="k">Early stopping</td><td>training duration</td><td>stop before excessive fitting</td></tr>
+    </tbody>
+  </table></div>
+  <div class="callout"><b class="lab">Engineering rule</b><p>Change one important variable at a time when you are trying to understand causality.</p></div>
+
+  <div class="viz" id="cmp-viz">
+    <p class="vt">Visualizer · Best validation result per run</p>
+    <p class="vd">Each run is summarised at its epoch of lowest validation loss.</p>
+    <div class="controls"><div class="seg" id="cm-seg" role="group" aria-label="Metric"></div></div>
+    <div class="bars" id="cm-bars"></div>
+    <div class="tw"><table><thead><tr><th>Run</th><th>Best epoch</th><th>Val loss</th><th>Val acc</th></tr></thead><tbody id="cm-tab"></tbody></table></div>
+  </div>
+
+  <div class="viz" id="ov-viz">
+    <p class="vt">Visualizer · Overlay the validation curves</p>
+    <div class="controls"><div class="seg" id="ov-seg" role="group" aria-label="Metric"></div></div>
+    <div class="controls" id="ov-chk" role="group" aria-label="Runs to show"></div>
+    <div id="ov-chart"></div>
+  </div>
+
+  <div class="callout warm"><b class="lab">Read with care</b><p>The early-stopping run was allowed up to 25 epochs while the others ran 15, and its validation loss was still falling at epoch 25, so its higher score partly reflects longer training. The exact ranking can vary by run, hardware and hyperparameters; do not claim that one regularizer is universally best.</p></div>
+  <p>The lesson is the method:</p>
+  <ol class="step6"><li>keep the split fixed</li><li>keep evaluation fixed</li><li>change one major intervention at a time</li><li>compare validation behavior</li><li>keep the simplest intervention that solves the observed problem</li></ol>
+</section>
+
+<!-- 12 ERRORS -->
+<section class="sec" id="errors" aria-labelledby="h-err" data-nav="Error analysis">
+  <div class="sec-head"><span class="num">12</span><h2 class="t" id="h-err">Better error visualization</h2></div>
+  <p>Accuracy compresses every prediction into correct/incorrect. Instead, inspect the actual image, the true label, the predicted label and the model's confidence: a grid of validation images titled with <code>true: … / pred: … (confidence)</code>. Pick one wrong prediction and ask:</p>
+  <ul>
+    <li>Was the model confident?</li>
+    <li>Is the image ambiguous?</li>
+    <li>Could augmentation help?</li>
+    <li>Is this a class-confusion issue?</li>
+  </ul>
+  <p>Aggregate metrics are not enough; error analysis should inspect actual failure patterns.</p>
+  <details class="code"><summary>Code</summary>
+<pre><code>@torch.no_grad()
+def collect_predictions(model,loader,n=12):
+    model.eval(); xs=[]; ys=[]; ps=[]
+    for x,y in loader:
+        p=model(x.to(device)).softmax(1).cpu(); xs.append(x); ys.append(y); ps.append(p)
+        if sum(len(a) for a in xs)&gt;=n: break
+    return torch.cat(xs)[:n],torch.cat(ys)[:n],torch.cat(ps)[:n]</code></pre></details>
+</section>
+
+<!-- 13 LEAKAGE -->
+<section class="sec" id="leak" aria-labelledby="h-leak" data-nav="Leakage">
+  <div class="sec-head"><span class="num">13</span><h2 class="t" id="h-leak">Data leakage: the silent generalization killer</h2></div>
+  <p>A validation score can look excellent if train and validation contain correlated or near-duplicate samples. For example: <i>video frames → random split → near-duplicates in both sets</i>. The model appears to generalize, but it has seen almost the same information.</p>
+  <div class="viz" id="leak-viz">
+    <p class="vt">Visualizer · Random split vs. keeping related frames together</p>
+    <p class="vd">Toy example: 3 videos × 4 consecutive frames. Neighbouring frames of a video are near-duplicates. Outlined frames have a near-duplicate on the other side of the split.</p>
+    <div class="controls"><div class="seg" id="lk-seg" role="group" aria-label="Split method"></div><button class="btn" id="lk-shuf">Reshuffle</button></div>
+    <div class="legend"><span><i class="frame tr" style="width:22px;height:22px;display:inline-flex"></i>train</span><span><i class="frame va" style="width:22px;height:22px;display:inline-flex"></i>validation</span><span><i class="frame tr dup" style="width:22px;height:22px;display:inline-flex"></i>outlined = leaked neighbour</span></div>
+    <div id="lk-g"></div>
+    <div class="readout" id="lk-read" aria-live="polite"></div>
+  </div>
+  <p>Validation must represent genuinely unseen, deployment-relevant examples, not merely technically different rows. Keep a final test set untouched for a last estimate after model-selection decisions.</p>
+  <div class="callout warm"><b class="lab">Another reason validation can mislead</b><p>Leakage, correlated samples, poor splits or distribution mismatch.</p></div>
+</section>
+
+<!-- 14 TRAIN/EVAL -->
+<section class="sec" id="evalmode" aria-labelledby="h-eval" data-nav="train() vs eval()">
+  <div class="sec-head"><span class="num">14</span><h2 class="t" id="h-eval"><code style="font-size:.8em">train()</code> vs. <code style="font-size:.8em">eval()</code>: a real debugging trap</h2></div>
+  <p>Dropout and BatchNorm behave differently during training and inference. Forgetting <code>model.eval()</code> can corrupt validation measurements: Dropout can remain stochastic and BatchNorm can use training-time batch statistics, making validation noisy or misleading.</p>
+  <div class="tw"><table>
+    <thead><tr><th>Module</th><th><code>model.train()</code></th><th><code>model.eval()</code></th></tr></thead>
+    <tbody>
+      <tr><td class="k">Dropout</td><td>randomly masks activations</td><td>disabled</td></tr>
+      <tr><td class="k">BatchNorm</td><td>mini-batch statistics</td><td>running statistics</td></tr>
+    </tbody>
+  </table></div>
+  <div class="viz" id="te-viz">
+    <p class="vt">Visualizer · Same input, twice</p>
+    <p class="vd">The recorded experiment ran the same image through a Dropout model two times in each mode.</p>
+    <div class="controls"><div class="seg" id="te-seg" role="group" aria-label="Mode"></div></div>
+    <div class="row">
+      <div class="col"><div class="lbl">Pass 1</div><div class="g mat" id="te-a" style="--cols:8;max-width:300px"></div></div>
+      <div class="col"><div class="lbl">Pass 2</div><div class="g mat" id="te-b" style="--cols:8;max-width:300px"></div></div>
+    </div>
+    <div class="readout" id="te-read" aria-live="polite"></div>
+  </div>
+  <details class="code"><summary>Code and output</summary>
+<pre><code>demo=ConvNetDropout(.5).to(device); x=xv[:1].to(device)
+demo.train()
+with torch.no_grad(): a=demo(x); b=demo(x)
+print("Train-mode outputs identical:",torch.allclose(a,b))
+demo.eval()
+with torch.no_grad(): c=demo(x); d=demo(x)
+print("Eval-mode outputs identical:",torch.allclose(c,d))
+<span class="out">Train-mode outputs identical: False
+Eval-mode outputs identical: True</span></code></pre></details>
+</section>
+
+<!-- 15 DIAGNOSE -->
+<section class="sec" id="diagnose" aria-labelledby="h-diag" data-nav="Diagnose">
+  <div class="sec-head"><span class="num">15</span><h2 class="t" id="h-diag">Diagnose before you fix</h2></div>
+  <p>Interviewers test <b>diagnostic reasoning</b>, not whether you can list techniques. Pattern to practise: <i>what changes → why it might help → how you verify it</i>.</p>
+  <div class="tw"><table>
+    <thead><tr><th>Evidence</th><th>First reading</th></tr></thead>
+    <tbody>
+      <tr><td class="k">High train + low validation</td><td>investigate overfitting</td></tr>
+      <tr><td class="k">Low train + low validation</td><td>investigate underfitting / optimization / data</td></tr>
+      <tr><td class="k">High train + high validation</td><td>evidence of good generalization</td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="viz" id="dg-viz">
+    <p class="vt">Visualizer · Scenario clinic</p>
+    <p class="vd">Pick a scenario, form your own hypothesis first, then reveal the strong response.</p>
+    <div class="controls"><div class="seg" id="dg-seg" role="group" aria-label="Scenario"></div></div>
+    <div id="dg-body"></div>
+  </div>
+
+  <h3>The AI-assisted check</h3>
+  <p>Suppose a teammate shares the log above and you ask an AI assistant for ranked hypotheses with one small diagnostic experiment each. Commit to your own one-sentence hypothesis <i>first</i>, then compare. Do not accept an answer because it sounds plausible: test it against your learning curves and run a small diagnostic.</p>
+  <p>The leading diagnosis is <b>overfitting / excessive memorization</b>, because training performance keeps improving while validation deteriorates. A strong engineer also checks split quality and duplicates, leakage, preprocessing mismatch, dataset size, model capacity, and label noise.</p>
+  <details class="dq"><summary>Prompt used in this exercise</summary><p>"I am training a PyTorch CNN for image classification. My training accuracy increases from 0.48 to 0.99, while validation accuracy improves to 0.58 and then falls to 0.53. Give me your top 3 hypotheses ranked by likelihood. For each hypothesis, give me one small diagnostic experiment that could confirm or rule it out. Do not rewrite my model yet."</p></details>
+</section>
+
+<!-- 16 RECAP -->
+<section class="sec" id="recap" aria-labelledby="h-recap" data-nav="Recap">
+  <div class="sec-head"><span class="num">16</span><h2 class="t" id="h-recap">Recap</h2></div>
+  <div class="callout"><b class="lab">The core idea</b><p>A model is not successful because it memorizes the training set. It is successful when learned structure transfers to genuinely unseen data.</p></div>
+
+  <h3>Rapid-fire revision</h3>
+  <p>Flip each card after answering in your own words.</p>
+  <div class="fcs" id="fcs"></div>
+
+  <h3>Exit ticket</h3>
+  <p>Answer without looking back, then open each item.</p>
+  <div id="exit"></div>
+
+  <h3>Next</h3>
+  <p>We now know how CNNs can overfit and how to improve generalization. The next question: <b>how do initialization and optimization affect whether the network can learn reliably in the first place?</b> That leads into Weight Initialization &amp; Optimizers.</p>
+</section>
+
+</main>
+
+<footer>Computer Vision 2 post read</footer>
+
+<script>
+const DATA={"base":{"tl":[2.1828,2.0483,1.9272,1.8661,1.7982,1.7271,1.6762,1.6607,1.5906,1.5549,1.5293,1.509,1.4713,1.4431,1.4075],"ta":[0.165,0.213,0.251,0.277,0.309,0.344,0.365,0.376,0.398,0.418,0.432,0.444,0.452,0.466,0.487],"vl":[2.0764,1.9719,2.0028,1.9714,1.8374,1.8144,1.7152,1.6805,1.5843,1.5696,1.5896,1.7124,1.5357,1.5159,1.436],"va":[0.191,0.26,0.21,0.254,0.29,0.324,0.365,0.374,0.402,0.406,0.38,0.387,0.443,0.44,0.461],"lr":[]},"bn":{"tl":[1.8207,1.5322,1.3858,1.2589,1.182,1.0919,1.0279,0.9285,0.8808,0.8121,0.7706,0.6753,0.6429,0.5905,0.5448],"ta":[0.321,0.441,0.511,0.558,0.585,0.618,0.645,0.682,0.702,0.718,0.737,0.769,0.783,0.803,0.82],"vl":[2.4167,1.9172,1.8848,1.4916,1.4072,1.9039,1.8863,2.1764,1.6079,1.6506,2.8081,1.6059,1.4916,1.4437,1.4326],"va":[0.167,0.33,0.316,0.459,0.473,0.381,0.384,0.33,0.452,0.462,0.347,0.521,0.518,0.516,0.536],"lr":[]},"drop":{"tl":[2.2414,2.1108,1.9762,1.9094,1.9045,1.8409,1.8105,1.7497,1.6865,1.6695,1.6714,1.6216,1.5672,1.5601,1.5408],"ta":[0.154,0.196,0.224,0.258,0.266,0.282,0.304,0.329,0.359,0.365,0.373,0.387,0.4,0.415,0.422],"vl":[2.1313,2.0135,1.8806,1.8965,1.8932,1.7785,1.7389,1.6929,1.6203,1.7709,1.5834,1.586,1.5528,1.4995,1.4718],"va":[0.197,0.23,0.28,0.26,0.29,0.303,0.346,0.376,0.389,0.342,0.403,0.399,0.422,0.429,0.449],"lr":[]},"wd":{"tl":[2.1984,1.9905,1.9186,1.8156,1.7236,1.6923,1.622,1.632,1.5773,1.5102,1.4636,1.487,1.4243,1.3983,1.3545],"ta":[0.16,0.235,0.272,0.299,0.341,0.361,0.395,0.391,0.411,0.438,0.451,0.448,0.471,0.487,0.498],"vl":[2.0809,1.9453,1.8736,1.7845,1.8796,1.6316,1.7703,1.6934,1.5435,1.5126,1.5827,1.5315,1.4575,1.4303,1.5034],"va":[0.215,0.269,0.302,0.327,0.297,0.393,0.354,0.369,0.428,0.436,0.418,0.434,0.461,0.466,0.446],"lr":[]},"aug":{"tl":[2.2108,2.0743,1.9905,1.9514,1.9127,1.8523,1.7773,1.7741,1.7364,1.6692,1.6355,1.5925,1.5686,1.5323,1.5141],"ta":[0.16,0.201,0.231,0.254,0.271,0.298,0.327,0.339,0.349,0.373,0.389,0.405,0.414,0.425,0.442],"vl":[2.1271,2.0236,2.0545,1.9063,1.8631,1.8118,1.7951,1.7074,1.6929,1.6884,1.6221,1.5953,1.5546,1.5402,1.5799],"va":[0.206,0.198,0.23,0.296,0.299,0.324,0.324,0.347,0.353,0.345,0.408,0.418,0.417,0.432,0.403],"lr":[]},"sched":{"tl":[2.17,2.0308,1.9201,1.8787,1.7932,1.7481,1.6835,1.6667,1.5961,1.5442,1.5188,1.4667,1.4651,1.4157,1.3776],"ta":[0.169,0.216,0.246,0.271,0.318,0.338,0.361,0.36,0.398,0.415,0.433,0.454,0.457,0.473,0.493],"vl":[2.0944,1.9434,1.9718,1.9148,1.8222,1.7138,1.7405,1.6341,1.5683,1.6023,1.5141,1.5736,1.4735,1.4461,1.4592],"va":[0.224,0.249,0.246,0.283,0.32,0.362,0.347,0.394,0.427,0.411,0.437,0.417,0.45,0.471,0.46],"lr":[0.001,0.001,0.001,0.001,0.001,0.001,0.001,0.001,0.001,0.001,0.001,0.001,0.001,0.001,0.001]},"es":{"tl":[2.2044,2.0143,1.8844,1.8481,1.7847,1.7057,1.662,1.6365,1.605,1.5598,1.5571,1.503,1.4549,1.446,1.4336,1.3922,1.3732,1.3398,1.3106,1.2884,1.2812,1.2443,1.2065,1.1671,1.1381],"ta":[0.158,0.227,0.27,0.288,0.309,0.344,0.365,0.374,0.399,0.412,0.413,0.438,0.466,0.469,0.466,0.483,0.49,0.499,0.521,0.524,0.526,0.541,0.554,0.565,0.588],"vl":[2.0601,1.9525,1.8532,1.8298,1.7478,1.8704,1.6746,1.6032,1.5627,1.5931,1.6084,1.5255,1.46,1.5361,1.5419,1.4311,1.4051,1.441,1.3934,1.363,1.3574,1.3372,1.3223,1.3045,1.2783],"va":[0.189,0.231,0.282,0.291,0.328,0.324,0.382,0.394,0.416,0.419,0.417,0.442,0.471,0.439,0.43,0.46,0.479,0.458,0.481,0.5,0.496,0.52,0.528,0.524,0.54],"lr":[]}};
+const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
+const fmt=n=>Number(n).toLocaleString('en-US');
+function h(tag,attrs,...kids){const e=document.createElement(tag);for(const[k,v]of Object.entries(attrs||{})){if(k==='class')e.className=v;else if(k==='style')e.style.cssText=v;else if(k.startsWith('on'))e.addEventListener(k.slice(2),v);else if(v!==false&&v!=null)e.setAttribute(k,v);}
+  kids.flat().forEach(c=>{if(c==null||c===false)return;e.append(c.nodeType?c:document.createTextNode(c));});return e;}
+function seg(host,items,cur,cb){host.innerHTML='';items.forEach(([v,l])=>{const b=h('button',{type:'button','aria-pressed':String(v===cur)},l);b.addEventListener('click',()=>{$$('button',host).forEach((x,i)=>x.setAttribute('aria-pressed',String(items[i][0]===v)));cb(v);});host.append(b);});}
+function mkGrid(host,rows,cols,fn){host.innerHTML='';host.style.setProperty('--cols',cols);const cells=[];for(let r=0;r<rows;r++)for(let c=0;c<cols;c++){const d=h('div',{class:'c'});fn&&fn(d,r,c);host.append(d);cells.push(d);}return cells;}
+
+/* nav */
+(function(){const toc=$('#toc');$$('section.sec').forEach(s=>toc.append(h('a',{href:'#'+s.id},s.dataset.nav)));const links=$$('a',toc);
+ const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){links.forEach(l=>l.classList.toggle('on',l.getAttribute('href')==='#'+e.target.id));const on=$('a.on',toc);if(on)on.scrollIntoView({block:'nearest',inline:'center'});}}),{rootMargin:'-30% 0px -60% 0px'});
+ $$('section.sec').forEach(s=>io.observe(s));const prog=$('#prog');const upd=()=>{const d=document.documentElement;prog.style.width=(100*d.scrollTop/(d.scrollHeight-d.clientHeight||1))+'%';};addEventListener('scroll',upd,{passive:true});upd();})();
+
+/* ---------- line chart ---------- */
+function lineChart(host,o){
+  host.innerHTML='';
+  const W=640,H=300,m={l:56,r:16,t:14,b:44},n=o.xs.length,dec=o.dec??3;
+  const all=o.series.flatMap(s=>s.vals);let lo=o.ymin??Math.min(...all),hi=o.ymax??Math.max(...all);if(o.ymin==null||o.ymax==null){const p=(hi-lo)*.08||.1;if(o.ymin==null)lo-=p;if(o.ymax==null)hi+=p;}
+  const x=i=>m.l+(n===1?0:i*(W-m.l-m.r)/(n-1)),y=v=>m.t+(hi-v)*(H-m.t-m.b)/(hi-lo||1);
+  let s=`<svg class="chart" viewBox="0 0 ${W} ${H}" tabindex="0" role="img" aria-label="${o.aria||'Line chart'}. Use left and right arrow keys to read values.">`;
+  for(let k=0;k<=4;k++){const v=lo+(hi-lo)*k/4,yy=y(v);s+=`<line x1="${m.l}" x2="${W-m.r}" y1="${yy}" y2="${yy}" stroke="#D5C7A3" stroke-width="1"/><text x="${m.l-8}" y="${yy+4}" font-size="11" text-anchor="end">${(+v.toFixed(2)).toString()}</text>`;}
+  const step=Math.ceil(n/12);o.xs.forEach((l,i)=>{if(i%step===0||i===n-1)s+=`<text x="${x(i)}" y="${H-m.b+16}" font-size="11" text-anchor="middle">${l}</text>`;});
+  s+=`<text x="${(W+m.l)/2}" y="${H-6}" font-size="12" text-anchor="middle">${o.xTitle||'Epoch'}</text><text x="14" y="${H/2}" font-size="12" text-anchor="middle" transform="rotate(-90 14 ${H/2})">${o.yTitle||''}</text>`;
+  if(o.zero!==false&&lo<0&&hi>0)s+=`<line x1="${m.l}" x2="${W-m.r}" y1="${y(0)}" y2="${y(0)}" stroke="#18261F" stroke-width="1.5"/>`;
+  o.series.forEach(se=>{const pts=se.vals.map((v,i)=>`${x(i)},${y(v)}`).join(' ');
+    s+=`<polyline points="${pts}" fill="none" stroke="${se.color}" stroke-width="${se.w||2.5}" ${se.dash?`stroke-dasharray="${se.dash}"`:''} stroke-linejoin="round"/>`;
+    if(n<=30)se.vals.forEach((v,i)=>{s+=se.shape==='sq'?`<rect x="${x(i)-3.5}" y="${y(v)-3.5}" width="7" height="7" fill="${se.color}"/>`:se.shape==='tri'?`<path d="M${x(i)},${y(v)-4.5}l4.5,8h-9z" fill="${se.color}"/>`:`<circle cx="${x(i)}" cy="${y(v)}" r="3.3" fill="${se.color}"/>`;});});
+  (o.marks||[]).forEach(mk=>{s+=`<line x1="${x(mk.i)}" x2="${x(mk.i)}" y1="${m.t}" y2="${H-m.b}" stroke="${mk.color||'#18261F'}" stroke-width="2" stroke-dasharray="3 3"/><text x="${x(mk.i)+4}" y="${m.t+12}" font-size="11" font-weight="700" style="fill:#18261F">${mk.label}</text>`;});
+  s+=`<g id="hv" style="display:none"><line id="hl" y1="${m.t}" y2="${H-m.b}" stroke="#18261F" stroke-width="1.5"/></g></svg>`;
+  const leg=h('div',{class:'legend'});o.series.forEach(se=>leg.append(h('span',{},(()=>{const e=document.createElementNS('http://www.w3.org/2000/svg','svg');e.setAttribute('viewBox','0 0 34 12');e.innerHTML=`<line x1="2" x2="32" y1="6" y2="6" stroke="${se.color}" stroke-width="3" ${se.dash?`stroke-dasharray="${se.dash}"`:''}/>`+(se.shape==='sq'?`<rect x="13" y="2" width="8" height="8" fill="${se.color}"/>`:se.shape==='tri'?`<path d="M17,1l5,10h-10z" fill="${se.color}"/>`:`<circle cx="17" cy="6" r="4" fill="${se.color}"/>`);return e;})(),se.name)));
+  const box=h('div');box.innerHTML=s;const svg=box.firstChild;const rd=h('div',{class:'readout','aria-live':'polite'},o.hint||'Hover the chart, or focus it and use ← → keys, to read exact values.');
+  host.append(leg,box,rd);
+  const hv=$('#hv',svg),hl=$('#hl',svg);let idx=0;
+  function show(i){idx=Math.max(0,Math.min(n-1,i));hv.style.display='';hl.setAttribute('x1',x(idx));hl.setAttribute('x2',x(idx));
+    rd.innerHTML=`<b>${o.xName||'Epoch'} ${o.xs[idx]}</b> — `+o.series.map(se=>`${se.name}: <b>${se.vals[idx].toFixed(dec)}</b>`).join(' · ');}
+  svg.addEventListener('mousemove',e=>{const r=svg.getBoundingClientRect(),px=(e.clientX-r.left)*W/r.width;show(Math.round((px-m.l)/((W-m.l-m.r)/(n-1||1))));});
+  svg.addEventListener('touchmove',e=>{const t=e.touches[0],r=svg.getBoundingClientRect(),px=(t.clientX-r.left)*W/r.width;show(Math.round((px-m.l)/((W-m.l-m.r)/(n-1||1))));},{passive:true});
+  svg.addEventListener('keydown',e=>{if(e.key==='ArrowRight'){e.preventDefault();show(idx+1);}if(e.key==='ArrowLeft'){e.preventDefault();show(idx-1);}});
+}
+const C={tr:'#1D5A41',va:'#9A5F33'};
+const NAMES={base:'Baseline',bn:'BatchNorm',drop:'Dropout',wd:'Weight decay',aug:'Augmentation',sched:'Scheduler',es:'Early stopping'};
+const arr=(a,f)=>a.map(f);
+function runChart(host,key,extra){
+  const R=DATA[key];const xs=R.tl.map((_,i)=>i+1);let mode='loss';
+  const wrap=h('div');const controls=h('div',{class:'controls'});const segh=h('div',{class:'seg',role:'group','aria-label':'Metric'});controls.append(segh);
+  const ch=h('div');
+  host.append(h('p',{class:'vt'},`Visualizer · ${NAMES[key]}: training vs. validation`),h('p',{class:'vd'},`Recorded results from the experiment (${xs.length} epochs). Switch between loss, accuracy and the generalization gap.`),controls,ch);
+  const items=[['loss','Loss'],['acc','Accuracy'],['gap','Gap (train − val acc)']];
+  function draw(){
+    if(mode==='gap')lineChart(ch,{xs,dec:3,yTitle:'Train acc − val acc',aria:NAMES[key]+' generalization gap',series:[{name:'gap',vals:R.ta.map((v,i)=>v-R.va[i]),color:C.tr,shape:'circle'}]});
+    else{const t=mode==='loss'?R.tl:R.ta,v=mode==='loss'?R.vl:R.va;
+      lineChart(ch,{xs,dec:mode==='loss'?4:3,yTitle:mode==='loss'?'Loss':'Accuracy',aria:NAMES[key]+' '+mode,series:[{name:'train',vals:t,color:C.tr,shape:'circle'},{name:'validation',vals:v,color:C.va,dash:'7 4',shape:'sq'}]});}
+    const bi=R.vl.indexOf(Math.min(...R.vl)),L=xs.length-1;
+    ch.append(h('p',{class:'cap'},`Epoch ${xs[L]}: train ${R.tl[L].toFixed(4)} / ${R.ta[L].toFixed(3)}, validation ${R.vl[L].toFixed(4)} / ${R.va[L].toFixed(3)} (loss / accuracy). Lowest validation loss: epoch ${bi+1} (${R.vl[bi].toFixed(4)}).`));
+  }
+  seg(segh,items,'loss',v=>{mode=v;draw();});draw();
+}
+['base','bn','drop','wd','aug','sched','es'].forEach(k=>runChart($('#run-'+k),k));
+
+/* ---------- setup ---------- */
+(function(){
+  const bar=(host,rows)=>rows.forEach(([l,pct,txt,alt])=>host.append(h('div',{class:'br'},h('span',{},l),h('div',{style:'display:flex;align-items:center'},h('div',{class:'tr',style:'flex:1'},h('div',{class:'fl'+(alt?' alt':''),style:`width:${pct}%`})),h('span',{class:'vl'},txt)))));
+  bar($('#split'),[['Training',100,'4,000 images'],['Validation',50,'2,000 images',true]]);
+  ['airplane','automobile','bird','cat','deer','dog','frog','horse','ship','truck'].forEach(c=>$('#classes').append(h('span',{class:'tag'},c)));
+  const L=[['Input','3 × 32 × 32','An RGB CIFAR-10 image.'],['Conv 64','ReLU','Conv2d(3, 64, 3, padding=1)'],['Conv 128','ReLU → MaxPool','Conv2d(64, 128, 3, padding=1), then MaxPool2d(2)'],['Conv 256','ReLU → MaxPool','Conv2d(128, 256, 3, padding=1), then MaxPool2d(2)'],['Conv 256','ReLU → GAP','Conv2d(256, 256, 3, padding=1), then AdaptiveAvgPool2d(1)'],['Linear','256 → 10','Classifier: one score per class. Whole model: 963,466 trainable parameters.']];
+  const p=$('#net-pipe');let cur=1;
+  L.forEach((l,i)=>{if(i)p.append(h('span',{class:'sep'},'→'));const b=h('button',{type:'button',class:'node'+(i===0?' io':''),'aria-pressed':'false'},l[0]);if(i>0)b.addEventListener('click',()=>{cur=i;u();});p.append(b);});
+  function u(){$$('.node',p).forEach((b,i)=>b.setAttribute('aria-pressed',String(i===cur)));$('#net-read').innerHTML=`<b>${L[cur][0]}</b> · ${L[cur][1]}<br>${L[cur][2]}`;}u();
+})();
+
+/* ---------- schematic patterns ---------- */
+(function(){
+  const xs=Array.from({length:15},(_,i)=>i+1);
+  const P={under:{l:'Underfitting',t:xs.map((_,i)=>0.45+0.1*(1-Math.exp(-i/6))),v:xs.map((_,i)=>0.42+0.08*(1-Math.exp(-i/6))),r:'Both curves stay low: the model is not fitting even the training data well.'},
+    good:{l:'Good fit',t:xs.map((_,i)=>0.45+0.45*(1-Math.exp(-i/4))),v:xs.map((_,i)=>0.42+0.42*(1-Math.exp(-i/4))),r:'Both curves are high and move together.'},
+    over:{l:'Overfitting',t:xs.map((_,i)=>0.45+0.54*(1-Math.exp(-i/4))),v:xs.map((_,i)=>i<5?0.42+0.16*(i/4):0.58-0.02*(i-4)),r:'Training keeps improving while validation stops improving, then worsens.'}};
+  const draw=k=>{lineChart($('#sd-chart'),{xs,dec:2,ymin:0.3,ymax:1,yTitle:'Accuracy (schematic)',aria:P[k].l+' schematic',series:[{name:'train',vals:P[k].t,color:C.tr,shape:'circle'},{name:'validation',vals:P[k].v,color:C.va,dash:'7 4',shape:'sq'}]});$('#sd-read').innerHTML=`<b>${P[k].l}:</b> ${P[k].r}`;};
+  seg($('#sd-seg'),Object.entries(P).map(([k,v])=>[k,v.l]),'over',draw);draw('over');
+})();
+
+/* ---------- BN ---------- */
+(function(){
+  const pipe=$('#bn-pipe');['Conv','BatchNorm','ReLU'].forEach((t,i)=>{if(i)pipe.append(h('span',{class:'sep'},'→'));pipe.append(h('div',{class:'node io',style:i===1?'border-style:solid;border-color:var(--g700);color:var(--g900)':''},t));});
+  const T={train:'<b>Train mode:</b> activations are normalized using the statistics of the current mini-batch.',eval:'<b>Eval mode:</b> activations are normalized using the running statistics collected during training.'};
+  seg($('#bn-seg'),[['train','model.train()'],['eval','model.eval()']],'train',v=>$('#bn-read').innerHTML=T[v]);$('#bn-read').innerHTML=T.train;
+})();
+
+/* ---------- dropout + train/eval ---------- */
+function maskRow(n,p){return Array.from({length:n},()=>Math.random()>=p);}
+(function(){
+  let mode='train',mask=maskRow(16,.5);const p=$('#dr-p');
+  function draw(){const pv=+p.value;$('#dr-pv').textContent=pv.toFixed(1);
+    mkGrid($('#dr-g'),2,8,(d,r,c)=>{const on=mode==='eval'||mask[r*8+c];d.className='unit'+(on?'':' off');d.textContent=on?'1':'0';d.style.aspectRatio='1';});
+    const k=mask.filter(x=>!x).length;
+    $('#dr-read').innerHTML=mode==='eval'?'<b>eval mode:</b> Dropout is disabled, all 16 activations pass through.':`<b>train mode:</b> ${k} of 16 activations dropped on this pass (p = ${pv.toFixed(1)} on average). Each pass drops a different set.`;}
+  seg($('#dr-seg'),[['train','train mode'],['eval','eval mode']],'train',v=>{mode=v;draw();});
+  p.addEventListener('input',()=>{mask=maskRow(16,+p.value);draw();});
+  $('#dr-new').addEventListener('click',()=>{mask=maskRow(16,+p.value);draw();});draw();
+  // train/eval demo
+  let m2='train',a=maskRow(16,.5),b=maskRow(16,.5);
+  function d2(){[['#te-a',a],['#te-b',b]].forEach(([id,mk])=>mkGrid($(id),2,8,(d,r,c)=>{const on=m2==='eval'||mk[r*8+c];d.className='unit'+(on?'':' off');d.textContent=on?'1':'0';}));
+    $('#te-read').innerHTML=m2==='train'?'<b>Train-mode outputs identical: False</b> — the two passes use different masks.':'<b>Eval-mode outputs identical: True</b> — nothing is masked, so repeated passes agree.';}
+  seg($('#te-seg'),[['train','model.train()'],['eval','model.eval()']],'train',v=>{m2=v;a=maskRow(16,.5);b=maskRow(16,.5);d2();});d2();
+})();
+
+/* ---------- weight decay ---------- */
+(function(){
+  const pre=[['Small, spread-out weights',[.5,.5,.5,.5]],['One large weight (same total magnitude)',[2,0,0,0]]];
+  const ins=[0,1,2,3].map(i=>$('#w'+i));
+  function draw(){const w=ins.map(i=>+i.value||0),s=w.reduce((a,b)=>a+b*b,0),l=+$('#wd-l').value;
+    const bars=$('#wd-bars');bars.innerHTML='';const mx=Math.max(...w.map(x=>x*x),1e-9);
+    w.forEach((x,i)=>bars.append(h('div',{class:'br'},h('span',{},`w${i+1}² = ${(x*x).toFixed(2)}`),h('div',{class:'tr'},h('div',{class:'fl'+(x*x===mx?' alt':''),style:`width:${Math.max(0,x*x/mx*100)}%`})))));
+    $('#wd-read').innerHTML=`Σ w² = <b>${s.toFixed(2)}</b> → penalty λ × Σ w² = ${l} × ${s.toFixed(2)} = <b>${(l*s).toFixed(4)}</b> added to the data loss. Squaring makes one large weight cost more than several small ones.`;}
+  const box=$('#wd-pre');pre.forEach(([t,w])=>{const b=h('button',{type:'button',class:'chip'},t);b.addEventListener('click',()=>{w.forEach((x,i)=>ins[i].value=x);draw();});box.append(b);});
+  ins.forEach((i,k)=>{i.value=pre[0][1][k];i.addEventListener('input',draw);});$('#wd-l').addEventListener('input',draw);draw();
+})();
+
+/* ---------- augmentation ---------- */
+(function(){
+  const PAL={'.':[226,236,228],o:[235,140,52],d:[190,100,30],w:[250,245,235],k:[30,30,30],g:[110,190,90],p:[240,150,160]};
+  const CAT=["................",".dd..........dd.",".dpd........dpd.",".dooooooooooood.",".oooooooooooooo.",".oooggooooggooo.",".ooogkooookgooo.",".oooooooooooooo.",".oooowwppwwoooo.",".ddoowwkkwwoodd.",".oooowkwwkwoooo.",".oooooowwwwoooo.","..oooooooooooo..","...oooooooooo...","................","................"].map(r=>[...r].map(c=>PAL[c]));
+  const pad=2;let flip=false,dx=pad,dy=pad;
+  function draw(){
+    mkGrid($('#au-a'),16,16,(d,r,c)=>{d.style.background=`rgb(${CAT[r][c]})`;});
+    mkGrid($('#au-b'),16,16,(d,r,c)=>{const sc=flip?15-(c+dx-pad):c+dx-pad,sr=r+dy-pad;let px=[0,0,0];
+      if(sr>=0&&sr<16){const cc=flip?15-sc:sc;/*flip first, then crop*/}
+      const fc=c+dx-pad;if(sr>=0&&sr<16&&fc>=0&&fc<16){const oc=flip?15-fc:fc;px=CAT[sr][oc];}d.style.background=`rgb(${px})`;});
+    $('#au-read').innerHTML=`flip: <b>${flip?'yes':'no'}</b> · crop offset (x, y): <b>(${dx-pad}, ${dy-pad})</b> pixels after padding by ${pad}. The label is unchanged.`;
+    $('#au-flip').setAttribute('aria-pressed',String(flip));}
+  $('#au-orig').addEventListener('click',()=>{flip=false;dx=dy=pad;draw();});
+  $('#au-flip').addEventListener('click',()=>{flip=!flip;draw();});
+  $('#au-rand').addEventListener('click',()=>{flip=Math.random()<.5;dx=Math.floor(Math.random()*(2*pad+1));dy=Math.floor(Math.random()*(2*pad+1));draw();});
+  draw();
+})();
+
+/* ---------- LR what-if ---------- */
+(function(){
+  const vl=DATA.sched.vl,xs=vl.map((_,i)=>i+1);
+  function sim(pat,fac){let best=Infinity,bad=0,lr=1,out=[],drops=[];vl.forEach((v,i)=>{if(v<best*(1-1e-4)){best=v;bad=0;}else bad++;if(bad>pat){lr*=fac;bad=0;drops.push(i+1);}out.push(lr);});return{out,drops};}
+  function draw(){const pat=+$('#lr-pat').value,fac=+$('#lr-fac').value,{out,drops}=sim(pat,fac);
+    lineChart($('#lr-chart'),{xs,dec:4,ymin:0,ymax:1.1,yTitle:'Learning rate (×10⁻³)',aria:'Learning rate schedule what-if',series:[{name:'learning rate',vals:out,color:C.tr,shape:'tri'}]});
+    $('#lr-read').innerHTML=drops.length?`With patience ${pat} and factor ${fac}, the rate would drop at epoch${drops.length>1?'s':''} <b>${drops.join(', ')}</b>, ending at <b>${(out[out.length-1]).toFixed(4)}×10⁻³</b>.`:`With patience ${pat} and factor ${fac}, the rate would <b>never drop</b>: it stays at 1.00e-03, as in the recorded run.`;}
+  ['#lr-pat','#lr-fac'].forEach(i=>$(i).addEventListener('input',draw));draw();
+  console.assert(sim(2,.5).drops.length===0);
+})();
+
+/* ---------- ES what-if ---------- */
+(function(){
+  const R=DATA.es,vl=R.vl,xs=vl.map((_,i)=>i+1);
+  function draw(){const pat=+$('#es-p').value;$('#es-pv').textContent=pat;
+    let best=Infinity,be=0,wait=0,stop=vl.length;for(let i=0;i<vl.length;i++){if(vl[i]<best){best=vl[i];be=i;wait=0;}else wait++;if(wait>=pat){stop=i+1;break;}}
+    const marks=[{i:be,label:'best '+(be+1),color:'#1D5A41'}];if(stop<vl.length)marks.push({i:stop-1,label:'stop '+stop,color:'#9A5F33'});
+    lineChart($('#es-chart'),{xs,dec:4,yTitle:'Validation loss',aria:'Early stopping what-if',marks,series:[{name:'validation loss',vals:vl,color:C.va,dash:'7 4',shape:'sq'}]});
+    $('#es-read').innerHTML=(stop<vl.length?`Patience ${pat}: training would stop at epoch <b>${stop}</b> and restore epoch <b>${be+1}</b> (val loss ${vl[be].toFixed(4)}, val acc ${R.va[be].toFixed(3)}).`:`Patience ${pat}: the stop is <b>never triggered</b> within 25 epochs; best epoch is <b>${be+1}</b> (val loss ${vl[be].toFixed(4)}, val acc ${R.va[be].toFixed(3)}).`);}
+  $('#es-p').addEventListener('input',draw);draw();
+})();
+
+/* ---------- comparison ---------- */
+(function(){
+  const keys=['base','bn','drop','wd','aug','sched','es'];
+  const S=keys.map(k=>{const R=DATA[k],i=R.vl.indexOf(Math.min(...R.vl));return{k,n:NAMES[k],e:i+1,l:R.vl[i],a:R.va[i]};});
+  const tb=$('#cm-tab');S.forEach(s=>tb.append(h('tr',{},h('td',{class:'k'},s.n),h('td',{},s.e),h('td',{class:'mono'},s.l.toFixed(4)),h('td',{class:'mono'},s.a.toFixed(3)))));
+  function draw(m){const bars=$('#cm-bars');bars.innerHTML='';const vals=S.map(s=>m==='a'?s.a:s.l),mx=m==='a'?1:Math.max(...vals);const best=m==='a'?Math.max(...vals):Math.min(...vals);
+    S.forEach((s,i)=>bars.append(h('div',{class:'br'},h('span',{},s.n),h('div',{style:'display:flex;align-items:center'},h('div',{class:'tr',style:'flex:1'},h('div',{class:'fl'+(vals[i]===best?' alt':''),style:`width:${vals[i]/mx*100}%`})),h('span',{class:'vl'},vals[i].toFixed(m==='a'?3:4)+(vals[i]===best?' ★ best':''))))));}
+  seg($('#cm-seg'),[['a','Best validation accuracy'],['l','Best validation loss']],'a',draw);draw('a');
+  // overlay
+  const cols=['#12392A','#3A8660','#9A5F33','#6B5B2E','#1D5A41','#B88A5A','#5E9C7A'],dash=['','7 4','','2 3','9 3 2 3','','7 4'],shp=['circle','sq','tri','circle','sq','tri','circle'];
+  let metric='a',on=new Set(['base','bn']);
+  const chk=$('#ov-chk');keys.forEach((k,i)=>{const id='ov'+k;const c=h('input',{type:'checkbox',id});c.checked=on.has(k);c.addEventListener('change',()=>{c.checked?on.add(k):on.delete(k);ov();});chk.append(h('label',{for:id,style:'display:inline-flex;gap:5px;align-items:center'},c,NAMES[k]));});
+  function ov(){const ks=keys.filter(k=>on.has(k));const L=Math.max(15,...ks.map(k=>DATA[k].vl.length));if(!ks.length){$('#ov-chart').textContent='Select at least one run.';return;}
+    lineChart($('#ov-chart'),{xs:Array.from({length:ks.some(k=>k==='es')?25:15},(_,i)=>i+1),dec:metric==='a'?3:4,yTitle:metric==='a'?'Validation accuracy':'Validation loss',aria:'Validation curves overlay',series:ks.map(k=>{const i=keys.indexOf(k);return{name:NAMES[k],vals:DATA[k][metric==='a'?'va':'vl'],color:cols[i],dash:dash[i],shape:shp[i],w:2.2};})});}
+  seg($('#ov-seg'),[['a','Validation accuracy'],['l','Validation loss']],'a',v=>{metric=v;ov();});ov();
+})();
+
+/* ---------- leakage ---------- */
+(function(){
+  const frames=[];for(let v=0;v<3;v++)for(let f=0;f<4;f++)frames.push({v,f});
+  let method='random',assign=[0,1,0,0, 1,0,0,1, 0,0,1,0]; // 1=val
+  function shuffle(){const a=Array(12).fill(0);const idx=[...Array(12).keys()].sort(()=>Math.random()-.5).slice(0,4);idx.forEach(i=>a[i]=1);return a;}
+  function draw(){const as=method==='random'?assign:frames.map(fr=>fr.v===2?1:0);
+    const dup=new Set();let pairs=0;for(let i=0;i<11;i++){if(frames[i].v===frames[i+1].v&&as[i]!==as[i+1]){pairs++;dup.add(i);dup.add(i+1);}}
+    const g=$('#lk-g');g.innerHTML='';[0,1,2].forEach(v=>{const row=h('div',{style:'display:grid;grid-template-columns:70px repeat(4,1fr);gap:6px;margin:6px 0;align-items:center;max-width:460px'},h('span',{class:'lbl',style:'margin:0'},'Video '+(v+1)));
+      for(let f=0;f<4;f++){const i=v*4+f;row.append(h('div',{class:'frame '+(as[i]?'va':'tr')+(dup.has(i)?' dup':''),'aria-label':`Video ${v+1} frame ${f+1}: ${as[i]?'validation':'train'}${dup.has(i)?', has near-duplicate on the other side':''}`},as[i]?'val':'train'));}g.append(row);});
+    $('#lk-read').innerHTML=pairs?`<b>${pairs}</b> pair${pairs>1?'s':''} of neighbouring frames straddle the split: the validation score will look better than it should because the model has effectively seen those frames.`:`<b>No neighbouring frames straddle the split.</b> Validation frames come from videos the model never saw in training.`;
+    $('#lk-shuf').style.display=method==='random'?'':'none';}
+  seg($('#lk-seg'),[['random','Random split'],['group','Keep each video together']],'random',v=>{method=v;draw();});
+  $('#lk-shuf').addEventListener('click',()=>{assign=shuffle();draw();});draw();
+})();
+
+/* ---------- scenario clinic ---------- */
+(function(){
+  const S=[
+   {k:'a',l:'99% train / 53% val',t:'Your CNN has 99% training accuracy and 53% validation accuracy. What are your first checks?',nums:'Train accuracy: 99%\nValidation accuracy: 53%',ans:'“I would first verify the split and preprocessing, then inspect learning curves and dataset size. After ruling out leakage or pipeline bugs, I would choose a targeted intervention such as augmentation, weight decay, dropout or early stopping and verify it experimentally.”'},
+   {k:'b',l:'58% train / 55% val',t:'Is this overfitting?',nums:'Train accuracy: 58%\nValidation accuracy: 55%',ans:'Probably not. Both are poor. Investigate underfitting, optimization, insufficient capacity, excessive regularization, noisy labels or data problems.'},
+   {k:'c',l:'Teammate’s log',t:'A teammate reports these accuracies. What do you think is happening?',nums:'Epoch 01: train acc = 0.48, val acc = 0.44\nEpoch 05: train acc = 0.78, val acc = 0.58\nEpoch 10: train acc = 0.94, val acc = 0.56\nEpoch 15: train acc = 0.99, val acc = 0.53',chart:true,ans:'The leading diagnosis is overfitting / excessive memorization: training performance keeps improving while validation performance deteriorates. Also check split quality and duplicates, leakage, preprocessing mismatch, dataset size, model capacity and label noise.'},
+   {k:'d',l:'Only 500 images',t:'You have a small dataset and a large CNN. How do you respond?',nums:'500 labeled images\nLarge CNN\nTrain accuracy: 98%\nValidation accuracy: 61%',list:['Verify split / preprocessing','Check leakage and duplicates','Inspect learning curves','Use realistic augmentation','Add controlled regularization','Consider reducing unnecessary capacity','Use best-checkpoint / early stopping','Evaluate once on an untouched test set'],ans:'The interviewer is testing diagnostic reasoning, not whether you can list techniques. Explain why each step follows from the evidence.'},
+   {k:'e',l:'Final challenge',t:'Write a five-step plan before reading the answer.',nums:'Train loss: 0.04\nValidation loss: 0.92\n\nTrain accuracy: 99%\nValidation accuracy: 58%\n\nDataset: 2,000 images\nModel: 8-layer CNN\nNo augmentation\nNo weight decay\nNo early stopping',list:['Verify split and preprocessing for leakage/mismatch.','Inspect learning curves to locate validation deterioration.','Add realistic augmentation appropriate to the domain.','Add controlled regularization such as weight decay and/or dropout.','Use validation-based checkpointing/early stopping and evaluate once on a held-out test set.'],ans:'The key is explaining why each step follows from the evidence.'}];
+  const body=$('#dg-body');
+  function draw(k){const s=S.find(x=>x.k===k);body.innerHTML='';
+    body.append(h('div',{class:'ex'},h('p',{style:'margin:0;font-weight:600'},s.t),h('div',{class:'nums'},s.nums)));
+    if(s.chart){const c=h('div');body.append(c);lineChart(c,{xs:['1','5','10','15'],dec:2,ymin:.4,ymax:1,xTitle:'Epoch',yTitle:'Accuracy',aria:'Teammate log',series:[{name:'train',vals:[.48,.78,.94,.99],color:C.tr,shape:'circle'},{name:'validation',vals:[.44,.58,.56,.53],color:C.va,dash:'7 4',shape:'sq'}]});}
+    const d=h('details',{class:'dq'},h('summary',{},'Reveal the strong response'));
+    if(s.list)d.append(h(s.k==='d'?'ol':'ol',{class:'step6'},s.list.map(x=>h('li',{},x))));
+    d.append(h('p',{},s.ans));body.append(d);}
+  seg($('#dg-seg'),S.map(s=>[s.k,s.l]),'a',draw);draw('a');
+})();
+
+/* ---------- quizzes ---------- */
+const QZ={q1:{q:'A team says: “Our CNN has 99% training accuracy.” Should we ship it?',o:['Yes — 99% is excellent.','No — we need performance on unseen data.','CNNs cannot generalize.','Accuracy is never useful.'],a:1,e:'Training accuracy only tells us how well the model fits data it has already seen. The number to ask for next is validation/test performance on held-out data.'}};
+$$('[data-quiz]').forEach(host=>{const q=QZ[host.dataset.quiz],name='qz-'+host.dataset.quiz;const fb=h('div',{class:'qfb',role:'status','aria-live':'polite'}),fs=h('fieldset',{},h('legend',{class:'sr'},q.q));
+  q.o.forEach((t,i)=>{const id=name+i,inp=h('input',{type:'radio',name,id}),row=h('div',{class:'qo'},inp,h('label',{for:id},t));
+    inp.addEventListener('change',()=>{$$('.qo',fs).forEach(r=>r.classList.remove('right','wrong'));if(i===q.a){row.classList.add('right');fb.innerHTML='<b>Correct.</b> '+q.e;$$('input',fs).forEach(x=>x.disabled=true);}else{row.classList.add('wrong');fb.innerHTML='<b>Not quite.</b> Try another option.';}});fs.append(row);});
+  host.append(h('p',{class:'ql'},'Check yourself'),h('p',{class:'qt'},q.q),fs,fb);});
+
+/* ---------- flashcards + exit ---------- */
+[['What is overfitting?','Training-specific patterns fail to transfer to unseen data.'],
+ ['What is the strong curve signal?','Train improves while validation deteriorates.'],
+ ['BatchNorm?','Normalizes activations and stabilizes optimization.'],
+ ['Dropout?','Randomly masks activations during training.'],
+ ['Weight decay?','Discourages large parameter magnitudes.'],
+ ['Augmentation?','Adds label-preserving training variation.'],
+ ['Scheduler?','Changes the learning rate during optimization.'],
+ ['Early stopping?','Stops based on validation performance.'],
+ ['What does model.eval() do?','Switches modules to inference behavior.'],
+ ['High train accuracy = good model?','No.'],
+ ['Every train/validation gap = overfitting?','No.'],
+ ['Can augmentation hurt?','Yes.'],
+ ['Can BatchNorm replace all regularization?','No.'],
+ ['Why keep a final test set?','For a final estimate after model-selection decisions.']
+].forEach(([q,a])=>{const b=h('button',{type:'button',class:'fc','aria-expanded':'false',style:'min-height:110px'},h('div',{class:'q'},q),h('span',{class:'hint'},'Click to reveal'),h('div',{class:'a'},a));b.addEventListener('click',()=>b.setAttribute('aria-expanded',String(b.getAttribute('aria-expanded')!=='true')));$('#fcs').append(b);});
+[['What curve pattern signals overfitting?','Training keeps improving while validation stops improving or worsens.'],
+ ['Why is validation performance more useful than training accuracy for generalization?','Training data has already influenced the model; validation estimates unseen-data behavior.'],
+ ['What does Dropout change during training?','It randomly masks activations during training.'],
+ ['What does weight decay encourage?','It discourages unnecessarily large parameter magnitudes.'],
+ ['Why can augmentation improve generalization?','It creates label-preserving variation and reduces reliance on accidental details.'],
+ ['Why does model.eval() matter?','It switches Dropout/BatchNorm to inference behavior.'],
+ ['Give one reason validation accuracy can be misleading.','Leakage, correlated samples, poor splits or distribution mismatch.'],
+ ['If train accuracy is 58% and validation accuracy is 55%, is overfitting your first diagnosis?','No; low train and validation performance points more toward underfitting/optimization/data issues.']
+].forEach(([q,a],i)=>$('#exit').append(h('details',{class:'dq'},h('summary',{},`${i+1}. ${q}`),h('p',{},a))));
+</script>
+</body>
+</html>
